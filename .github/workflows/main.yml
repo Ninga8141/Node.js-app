@@ -32,7 +32,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ninga8141
-          password: Ninga@veena8141
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
 
       # Step 6: Build Docker image
       - name: Build Docker image
