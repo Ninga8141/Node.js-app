@@ -1,55 +1,71 @@
-name: CI/CD Pipeline
+name: CI/CD to EC2
 
-# Run the workflow when code is pushed to the "main" branch
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code from your repo
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # Step 3: Install dependencies (ensure correct directory if needed)
-      - name: Install dependencies
-        run: npm install
-        working-directory: ./   # use ./Node.js-app if your package.json is there
-
-      # Step 4: Run tests (skip if none)
-      - name: Run tests
-        run: npm test || echo "No tests found"
-        working-directory: ./   # same as above
-
-  docker:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      # Step 1: Checkout code for Docker context
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Step 2: Login to DockerHub using secrets
-      - name: Login to DockerHub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
+          username: ninga8141
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Step 3: Build and push Docker image
-      - name: Build and Push Docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .               # change to ./Node.js-app if Dockerfile is there
+          context: .
+          file: ./Dockerfile
           push: true
           tags: ninga8141/nodejs-app:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 18.183.113.77
+          username: ubuntu
+          key: -----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEA0t8ZONlu474DoieTZrx4seaX2xidmBojMPdSHxZykgF2c1Hj
+l/bwOfUjugnyWJGL5nqnNJct+wIFggf7ZGnbt3A9g+O2hcupiqI5cB72ZM1KTbzx
+uzf2RVzMALfFTda7f7klr4C9maKV8X+e4BUu9x/jhOHS+mQswy2eKgg930lO/aaU
+qNPRgPoNAuWpToxmjjjqzepnagen0+P/ClL7EdK7AHGW4dGiNrWWm18z2/bmpboS
+UnP3ab/4ueolIUgDVicv63HSl5q0IlpMpqqD+MgJXkeU1gtzk/5he208G0TbOTCe
+zWn/T0lbipFNkNSuqvhaMp7JQFpPRLWMvYyTcwIDAQABAoIBAACeJrTD7k88f0Y6
+V3Q1mSTsSAWcTNnlObUrBFKS/kLvPimYU9JeJtYEodYpsUwRIRfLxDGjP788gkef
+Pl1M8hfXfFamlCJQNm7xirmJXa9t6onPw+WIhHAvlWlrIGjZ+DKnmDSra+LHVykd
+9pkxdrHCpif9gWC6amcn+w6kd4nv6663GuhRLnzR8zKPbbBXEAYReiU30wEZ7dPN
+IPmf8NVIqwRf9gygGkb44bR75JT9FpoMfBNeSJoi7TuIFEQX7L+TpsHFmn8DNjUh
+ZPL9JE61lBXAdoVTbDs8TzqCRzZmOEy3H0n1joX7P5KMqicDzzldYtsJ9dqHNq1x
+zEsRcgECgYEA7cfjTaST0yEW3HEUMxOOWBL53BtvFTNeHRldzkkc7gPK7Aa6DZ2c
+AylZ8n/pnj71SizN348SoEqMFuyXRNiAM+EEuj8TsDCJRxjjGxoagVc9EN8kvxOU
+P5dBxI2B8+iiDuxfNViv/YsuqutpAIo953xCQ7vMTIBFtt9zaquqr6UCgYEA4wdh
+HR7MQQn4f+Omdon9kk6UGxqFsPrATcE/0mqoG2wHaEBpoyasavPQEklUKcVyKEok
+CErmto/UuTDoeriGsB9ErnE4cZTKdz9Ua7Rw8tRclA5nzgqKdcauqSvo/KC53bhB
+aAOZXQxonjmCCB6jyvM7IJBmoW6oUi9Ke5TlyzcCgYBIxFszb6ItgnrUi2Z7Gwj8
+uxHr4hlki4vJq/GhJ47K6C45fPWDJTCRZx43sB12aB34zS1TtR0mIKouecjxMLBL
+MBmaRaNoz/Gy6FLYAG0MF/6AI0nDj+JWc5uU4xlZ41904bFhSfrRxL5LYC+KEsRP
+Cx/cSqSC5N5w0IEpq89YYQKBgFHdR1eI035gagszu8Li31zymNVtKug2g0GGfc0S
+SKwauFEPaQg72dB3OoBdkMu/NvrwQS38VFVgaASfbjVSdL7th4afrQrH7Hozi+2K
+k2/8w6VfzG6vvl3Z1wGJo+n0yxD4cB1hrtuurcrgUdM7uTRloNyNNXTgwjFgfCsz
+9ejhAoGAG4hc+kOZ1TnhzcQU2DGx6GxGfzKUyZ3hzFhIluA3cauVnwHar4Dp+tAg
+C37loZOh6dgfxEx76UmcFciL2gOgcXh9ZIHAwTBO1ZCwMdKnyH/rL5Qq5nIqVmjS
+/ssjdbfV9spAWco0ncqc0UO+4xz+lYKr4NVPyeywDC4KLcbTAU0=
+-----END RSA PRIVATE KEY-----
+          script: |
+            # Stop and remove any container using port 4000
+            sudo docker ps -q --filter "publish=4000" | xargs -r sudo docker stop
+            sudo docker ps -a -q --filter "publish=4000" | xargs -r sudo docker rm
+
+            # Pull latest image and run new container
+            sudo docker pull ninga8141/nodejs-app:latest
+            sudo docker run -d -p 4000:4000 --name nodejs-container ninga8141/nodejs-app:latest
