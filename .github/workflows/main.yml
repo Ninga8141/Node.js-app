@@ -42,7 +42,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ninga8141
-          password: dckr_pat_sfqlwPPOtVntz0qle6usfKl3C_c
+          password:
 
       # Step 3: Build and push Docker image
       - name: Build and Push Docker image
