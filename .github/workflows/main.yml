@@ -10,4 +10,4 @@
       sudo docker ps -a -q --filter "publish=4000" | xargs -r sudo docker rm
       # Pull latest image and run new container
       sudo docker pull ninga8141/nodejs-app:latest
-      sudo docker run -d -p 4000:4000 --name nodejs-container ninga8141/nodejs-app:latest
+      sudo docker run -d -p 3000:3000 --name nodejs-container ninga8141/nodejs-app:latest
